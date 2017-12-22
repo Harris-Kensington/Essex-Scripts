@@ -1,0 +1,69 @@
+game.Players.PlayerAdded:connect(function(Player)
+	local Folder = script.leaderstats:Clone()
+	Folder.Parent = Player
+	
+	local GBP = Folder:WaitForChild("GBP")
+	GBP.Value = 50
+	
+	local Rank = Folder:WaitForChild("Rank")
+	Rank.Value = Player:GetRoleInGroup(Player.Team.Settings.GroupId.Value)	
+	
+	local Trans = Instance.new("BoolValue", Player)
+	Trans.Name = "TRANSMITTING"
+	
+	Player.Changed:connect(function(prop)
+		if prop == "Team" then
+			if Player.Team == nil then return end
+			Rank.Value = Player:GetRoleInGroup(Player.Team.Settings.GroupId.Value)
+			wait(3)
+			local color3 = Player.TeamColor.Color
+			Player.Character.Head:WaitForChild("NameGui"):WaitForChild("gui"):WaitForChild("RANK").TextColor3 = color3
+			if prop.Name == "Civilian" then
+				if Player:GetRankInGroup(Player.Team.Settings.GroupId.Value) == 0 then
+					Player.Character.Head:WaitForChild("NameGui"):WaitForChild("gui"):WaitForChild("RANK").Text = "Civilian"
+					Player:WaitForChild("leaderstats"):WaitForChild("Rank").Text = "Civilian"
+				end
+			end
+		
+		end
+	end)
+		
+	if Player.Team.Name == "Civilian" then
+		repeat wait() until Player.Character
+		Player.Character:WaitForChild("Head"):WaitForChild("NameGui"):WaitForChild("gui"):WaitForChild("RANK").Text = "Civilian"
+		Player:WaitForChild("leaderstats"):WaitForChild("Rank").Value = "Civilian"
+	end
+	
+	Player.CharacterAdded:connect(function()			
+		for i,v in pairs (Player.Team:GetChildren()) do
+			if v.Name ~= "Settings" and not v.ClassName == "Tool" and not v.ClassName == "HopperBin" then return end
+			if v.ClassName == "Tool" or v.ClassName == "HopperBin" then
+				v:Clone().Parent = Player.Backpack
+			end
+		end
+		if Player.Team.Settings.RadioAccess.Value == true then
+			game:GetService("ReplicatedStorage"):WaitForChild("RadioGui"):Clone().Parent = Player.PlayerGui
+		end
+		if Player.Team.Settings.Uniforms.Value == true then
+			wait()
+			Player.Character.Shirt.ShirtTemplate = Player.Team.Settings.Uniforms.Shirt.Value
+			Player.Character.Pants.PantsTemplate = Player.Team.Settings.Uniforms.Pants.Value
+		end
+		
+		Player.Character.Head:WaitForChild("NameGui"):WaitForChild("gui"):WaitForChild("RANK").Text = Rank.Value
+	end)
+	
+	while wait(300) do
+		GBP.Value = GBP.Value + Player.Team.Settings.Income.Value
+	end
+	
+end)
+
+game.Players.PlayerRemoving:connect(function(Player)
+	for i,v in pairs(game.Players:GetPlayers()) do
+		if v.Team == Player.Team then
+			return
+		end
+	end
+	Player.Team.Parent = game.Teams.TeamRepo
+end)
